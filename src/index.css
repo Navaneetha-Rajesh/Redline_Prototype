@@ -1,75 +1,120 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg-pearl: #F2F1ED;
-  --crimson: #710014;
-  --sand: #B38F6F;
-  --obsidian: #161616;
-  --muted: #8E8A85;
-
-  --shadow-light: #FFFFFF;
-  --shadow-dark: #D7D2C5;
+  --bg-cream: #F5F3EC;
+  --crimson-wave: #630513;
+  --crimson-dark: #45030C;
+  --crimson-bright: #710014;
+  --sand-tint: #B38F6F;
+  --obsidian: #1E1919;
+  --muted: #827C75;
+  --card-bg: #FAF8F2;
+  --card-shadow: rgba(69, 3, 12, 0.08);
 }
 
 * {
   box-sizing: border-box;
 }
 
-body {
+html {
+  /* Locks the entire canvas color so over-scrolling never flashes white */
+  background-color: #ece6d4;
+}
+
+ body {
   margin: 0;
-  background-color: var(--bg-pearl);
+  min-height: 100vh;
   color: var(--obsidian);
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
+  background-image: url('/background.png');
+  background-repeat: no-repeat;
+  background-position: top center;
+  background-size: 100% auto; 
+  background-color: var(#ece6d4); 
+  
 }
 
-.neu-raised {
-  background: var(--bg-pearl);
-  border-radius: 28px;
-  box-shadow: 10px 10px 24px var(--shadow-dark),
-              -10px -10px 24px var(--shadow-light);
+
+
+/* Floating Elevated Storybook Card */
+.storybook-card {
+  background: var(--card-bg);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 16px 36px var(--card-shadow),
+              0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.neu-inset {
-  background: var(--bg-pearl);
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: inset 4px 4px 8px var(--shadow-dark),
-              inset -4px -4px 8px var(--shadow-light);
-  outline: none;
-  padding: 12px 16px;
+/* Soft Form Inputs */
+.storybook-input {
+  background: #ECE9DF;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
   color: var(--obsidian);
-  font-size: 14px;
+  outline: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: all 0.2s ease;
 }
 
-.neu-pill {
-  background: var(--bg-pearl);
-  border-radius: 12px;
+.storybook-input:focus {
+  background: #FFFFFF;
+  border-color: var(--crimson-bright);
+}
+
+/* Horizontal Blood Group Pills */
+.blood-pill {
+  background: #ECE9DF;
   border: none;
-  box-shadow: 4px 4px 8px var(--shadow-dark),
-              -4px -4px 8px var(--shadow-light);
+  border-radius: 8px;
+  padding: 8px 11px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--obsidian);
   cursor: pointer;
   transition: all 0.15s ease;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.6);
 }
 
-.neu-pill-active {
-  background: var(--crimson) !important;
+.blood-pill:hover {
+  background: #DFDBD0;
+}
+
+.blood-pill-active {
+  background: var(--crimson-bright) !important;
   color: #FFFFFF !important;
-  box-shadow: 4px 4px 10px var(--shadow-dark);
+  box-shadow: 0 4px 10px rgba(113, 0, 20, 0.35);
 }
 
-.neu-broadcast-btn {
-  background: var(--crimson);
-  color: #FFFFFF;
-  border: none;
-  border-radius: 22px;
-  box-shadow: 6px 6px 14px var(--shadow-dark),
-              -4px -4px 10px var(--shadow-light);
-  cursor: pointer;
+/* Main Broadcast Pill Button */
+.storybook-broadcast-btn {
+  background: #FAF8F2;
+  color: var(--obsidian);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 24px;
+  padding: 10px 30px;
+  font-size: 13px;
   font-weight: 600;
-  transition: opacity 0.15s ease;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
 }
 
-.neu-broadcast-btn:hover {
-  opacity: 0.95;
+.storybook-broadcast-btn:hover {
+  background: var(--crimson-bright);
+  color: #FFFFFF;
+  border-color: var(--crimson-bright);
 }
+
+/* Donor Cards on the bottom curve */
+.donor-card-story {
+  background: var(--card-bg);
+  border-radius: 14px;
+  padding: 18px 20px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+

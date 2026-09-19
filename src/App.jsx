@@ -2,27 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
 const KERALA_DISTRICTS = [
-  'Alappuzha',
-  'Ernakulam',
-  'Idukki',
-  'Kannur',
-  'Kasaragod',
-  'Kollam',
-  'Kottayam',
-  'Kozhikode',
-  'Malappuram',
-  'Palakkad',
-  'Pathanamthitta',
-  'Thiruvananthapuram',
-  'Thrissur',
-  'Wayanad'
+  'Alappuzha', 'Ernakulam', 'Idukki', 'Kannur', 'Kasaragod',
+  'Kollam', 'Kottayam', 'Kozhikode', 'Malappuram', 'Palakkad',
+  'Pathanamthitta', 'Thiruvananthapuram', 'Thrissur', 'Wayanad'
 ];
 
-const BLOOD_GROUPS = ['O+', 'O-', 'A+', 'A-', 'B+'];
+const BLOOD_GROUPS = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
 
 export default function App() {
-  // Navigation, District & Persona Switcher States
-  const [activeTab, setActiveTab] = useState('Urgent Triage');
+  // Navigation & Persona Switcher States
+  const [activeNav, setActiveNav] = useState('Requests'); // 'Active Matches' | 'Volunteer Register' | 'Requests' | 'Reserves'
   const [district, setDistrict] = useState('Ernakulam');
   const [persona, setPersona] = useState('recipient'); // 'recipient' | 'donor'
   const [activeDonorId, setActiveDonorId] = useState('');
@@ -36,7 +25,7 @@ export default function App() {
   // Application Lifecycle & Single Match States
   const [activeRequestId, setActiveRequestId] = useState(null);
   const [donors, setDonors] = useState([]);
-  const [matchedDonor, setMatchedDonor] = useState(null); // { id, name, phone }
+  const [matchedDonor, setMatchedDonor] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
@@ -49,7 +38,7 @@ export default function App() {
   const [regDaysAgo, setRegDaysAgo] = useState(100);
   const [regStatus, setRegStatus] = useState('');
 
-  // 1. MATCH: Fetch masked donors matching current group & chosen district
+  // Fetch masked donors for the selected group & district
   const fetchDonors = async (bloodGroup, currentDistrict) => {
     try {
       const { data, error } = await supabase
@@ -71,20 +60,18 @@ export default function App() {
     }
   };
 
-  // Re-fetch when blood group or district changes
   useEffect(() => {
     fetchDonors(selectedGroup, district);
     setMatchedDonor(null);
   }, [selectedGroup, district]);
 
-  // Keep activeDonorId aligned when donor pool changes
   useEffect(() => {
     if (donors.length > 0 && (!activeDonorId || !donors.find((d) => d.id === activeDonorId))) {
       setActiveDonorId(donors[0].id);
     }
   }, [donors]);
 
-  // 2. BROADCAST & NOTIFY: Recipient submits emergency request
+  // Broadcast emergency request (Only on Requests page)
   const handleBroadcast = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -110,7 +97,6 @@ export default function App() {
 
       setActiveRequestId(data.id);
 
-      // Trigger simulated push alert to matched eligible donors in this district
       const eligibleCount = donors.filter((d) => d.is_eligible).length;
       const newNotification = {
         id: Date.now(),
@@ -128,7 +114,7 @@ export default function App() {
     }
   };
 
-  // 3. ACCEPT: Triggered voluntarily by the donor
+  // Donor Acceptance Handler
   const handleAcceptDonation = async (donor) => {
     if (!activeRequestId) {
       alert('No active request. Please broadcast a request from the Recipient View first.');
@@ -155,7 +141,7 @@ export default function App() {
     }
   };
 
-  // 4. REGISTER: Add new donor
+  // Donor Self-Registration Handler
   const handleRegisterDonor = async (e) => {
     e.preventDefault();
     setRegStatus('Registering...');
@@ -185,567 +171,572 @@ export default function App() {
   const currentDonor = donors.find((d) => d.id === activeDonorId) || donors[0];
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '24px 20px' }}>
-      {/* Top Header: Brand, District Dropdown & Persona Switcher */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '14px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '24px', color: 'var(--crimson)', fontWeight: 'bold', cursor: 'pointer' }} onClick={() => setActiveTab('Urgent Triage')}>
-            🩸 RedLine
-          </span>
-          
-          {/* 14 District Selector */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 'bold' }}>📍 District:</span>
-            <select
-              className="neu-inset"
-              value={district}
-              onChange={(e) => setDistrict(e.target.value)}
-              style={{ padding: '6px 12px', fontSize: '13px', fontWeight: 'bold', background: 'var(--bg-pearl)', cursor: 'pointer' }}
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* Top Banner with Background */}
+      <div className="wave-canvas">
+        <header
+          style={{
+            position: 'relative',
+            zIndex: 10,
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '24px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '16px'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <span
+              style={{
+                fontFamily: 'Cormorant Garamond, serif',
+                fontSize: '32px',
+                fontWeight: 700,
+                color: '#1E1919',
+                cursor: 'pointer'
+              }}
+              onClick={() => setActiveNav('Requests')}
             >
-              {KERALA_DISTRICTS.map((dist) => (
-                <option key={dist} value={dist}>
-                  {dist}
-                </option>
-              ))}
-            </select>
+              RedLine
+            </span>
+
+            {/* District Selector */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 600 }}>📍</span>
+              <select
+                className="storybook-input"
+                value={district}
+                onChange={(e) => setDistrict(e.target.value)}
+                style={{ padding: '4px 8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+              >
+                {KERALA_DISTRICTS.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
           </div>
-        </div>
 
-        {/* Persona Switcher */}
-        <div className="neu-raised" style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--muted)', textTransform: 'uppercase', marginRight: '4px' }}>
-            Simulate Persona:
-          </span>
-          <button
-            type="button"
-            onClick={() => setPersona('recipient')}
-            className={`neu-pill ${persona === 'recipient' ? 'neu-pill-active' : ''}`}
-            style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 'bold' }}
-          >
-            🏥 Hospital Dispatcher
-          </button>
-          <button
-            type="button"
-            onClick={() => setPersona('donor')}
-            className={`neu-pill ${persona === 'donor' ? 'neu-pill-active' : ''}`}
-            style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 'bold' }}
-          >
-            👤 Donor Portal
-          </button>
+          {/* Navigation Items */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+            <nav style={{ display: 'flex', gap: '18px' }}>
+              {[
+                { label: 'Matches', key: 'Active Matches' },
+                { label: 'Volunteer Register', key: 'Volunteer Register' },
+                { label: 'Requests', key: 'Requests' },
+                { label: 'Reserves', key: 'Reserves' },
+              ].map((item) => {
+                const isActive = activeNav === item.key;
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => setActiveNav(item.key)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: isActive ? '#FFFFFF' : 'rgba(255, 255, 255, 0.85)',
+                      fontSize: '13px',
+                      fontWeight: isActive ? 700 : 500,
+                      cursor: 'pointer',
+                      borderBottom: isActive ? '2px solid #FFFFFF' : 'none',
+                      paddingBottom: '2px',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </nav>
 
-          {persona === 'donor' && donors.length > 0 && (
-            <select
-              className="neu-inset"
-              value={activeDonorId}
-              onChange={(e) => setActiveDonorId(e.target.value)}
-              style={{ padding: '4px 8px', fontSize: '12px', background: 'var(--bg-pearl)' }}
+            {/* Persona Switcher */}
+            <div
+              style={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(8px)',
+                borderRadius: '20px',
+                padding: '4px 6px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
             >
-              {donors.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name} ({d.blood_group} - {d.is_eligible ? 'Eligible' : 'Cooldown'})
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
-      </div>
+              <button
+                type="button"
+                onClick={() => setPersona('recipient')}
+                style={{
+                  background: persona === 'recipient' ? '#FFFFFF' : 'transparent',
+                  color: persona === 'recipient' ? 'var(--crimson-bright)' : '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '16px',
+                  padding: '4px 10px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                🏥 Recipient
+              </button>
+              <button
+                type="button"
+                onClick={() => setPersona('donor')}
+                style={{
+                  background: persona === 'donor' ? '#FFFFFF' : 'transparent',
+                  color: persona === 'donor' ? 'var(--crimson-bright)' : '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '16px',
+                  padding: '4px 10px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                👤 Donor
+              </button>
 
-      {/* Navigation Tabs */}
-      <header style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }}>
-        <nav style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          {['Live Matches', 'District Bank', 'Urgent Triage', 'Register Donor'].map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setActiveTab(tab)}
-              className={`neu-pill ${activeTab === tab ? 'neu-pill-active' : ''}`}
-              style={{ padding: '8px 18px', fontSize: '13px', fontWeight: '500' }}
-            >
-              {tab}
-            </button>
-          ))}
-        </nav>
-      </header>
-
-      {/* VIEW 1: URGENT TRIAGE */}
-      {activeTab === 'Urgent Triage' && (
-        <>
-          {/* RECIPIENT / HOSPITAL DISPATCH VIEW */}
-          {persona === 'recipient' && (
-            <main style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              {/* Push Alert Toast */}
-              {notifications.length > 0 && (
-                <div
-                  className="neu-raised"
+              {persona === 'donor' && donors.length > 0 && (
+                <select
+                  value={activeDonorId}
+                  onChange={(e) => setActiveDonorId(e.target.value)}
                   style={{
-                    width: '100%',
-                    maxWidth: '640px',
-                    marginBottom: '24px',
-                    padding: '14px 20px',
-                    borderLeft: '4px solid var(--sand)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '12px'
+                    background: 'rgba(255, 255, 255, 0.9)',
+                    border: 'none',
+                    borderRadius: '12px',
+                    padding: '2px 8px',
+                    fontSize: '11px',
+                    color: 'var(--obsidian)',
+                    outline: 'none'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '20px' }}>🔔</span>
-                    <div>
-                      <div style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--obsidian)' }}>
-                        {notifications[0].title}
-                      </div>
-                      <div style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                        {notifications[0].message}
-                      </div>
-                    </div>
-                  </div>
-                  <span className="neu-pill" style={{ padding: '4px 10px', fontSize: '11px', color: 'var(--sand)', fontWeight: 'bold' }}>
-                    {notifications[0].time}
-                  </span>
-                </div>
+                  {donors.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name} ({d.blood_group})
+                    </option>
+                  ))}
+                </select>
               )}
+            </div>
+          </div>
+        </header>
 
-              <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-                <span style={{ fontSize: '11px', letterSpacing: '1.2px', color: 'var(--crimson)', fontWeight: 'bold' }}>
-                  ● HIGH PRIORITY DISPATCH
-                </span>
-                <h1 style={{ fontFamily: 'Playfair Display, serif', fontSize: '36px', margin: '6px 0', color: 'var(--obsidian)' }}>
-                  Request
-                </h1>
-                <p style={{ color: 'var(--muted)', fontSize: '14px', margin: 0 }}>
-                  {district} District Operations • Instant Peer-to-Peer Triage
-                </p>
+        {/* Hero Section */}
+        <div
+          style={{
+            position: 'relative',
+            zIndex: 10,
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '20px 24px 60px 24px',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            alignItems: 'center',
+            gap: '40px'
+          }}
+        >
+          {/* Left Title Text */}
+          <div>
+            <h1
+              style={{
+                fontFamily: 'Cormorant Garamond, serif',
+                fontSize: '52px',
+                lineHeight: 1.1,
+                fontWeight: 600,
+                color: 'var(--obsidian)',
+                margin: '0 0 16px 0',
+                maxWidth: '460px'
+              }}
+            >
+              Emergency Blood Donor Matching App
+            </h1>
+            <p style={{ fontSize: '17px', color: 'var(--muted)', margin: 0, fontWeight: 400 }}>
+              Privacy-first emergency blood donor matching.
+            </p>
+
+            {/* Notification Alert Ticker: ONLY shown on Requests page */}
+            {activeNav === 'Requests' && persona === 'recipient' && notifications.length > 0 && (
+              <div
+                style={{
+                  marginTop: '28px',
+                  padding: '12px 18px',
+                  background: '#FFFFFF',
+                  borderRadius: '12px',
+                  borderLeft: '4px solid var(--sand-tint)',
+                  boxShadow: '0 4px 14px rgba(0, 0, 0, 0.04)',
+                  maxWidth: '380px'
+                }}
+              >
+                <div style={{ fontWeight: 700, fontSize: '12px', color: 'var(--crimson-bright)' }}>
+                  {notifications[0].title}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
+                  {notifications[0].message}
+                </div>
               </div>
+            )}
+          </div>
 
-              {/* Form Card */}
-              <form onSubmit={handleBroadcast} className="neu-raised" style={{ width: '100%', maxWidth: '640px', padding: '32px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '24px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <div>
-                      <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--muted)', display: 'block', marginBottom: '6px' }}>
-                        PATIENT / RECIPIENT NAME
-                      </label>
-                      <input
-                        className="neu-inset"
-                        type="text"
-                        value={patientName}
-                        onChange={(e) => setPatientName(e.target.value)}
-                        style={{ width: '100%' }}
-                        required
-                      />
-                    </div>
+          {/* Right Floating Content Card */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            
+            {/* 1. REQUESTS PAGE (Recipient Form) */}
+            {activeNav === 'Requests' && persona === 'recipient' && (
+              <>
+                <form
+                  onSubmit={handleBroadcast}
+                  className="storybook-card"
+                  style={{ width: '100%', maxWidth: '460px', padding: '28px 30px' }}
+                >
+                  <div style={{ marginBottom: '14px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--obsidian)', display: 'block', marginBottom: '6px' }}>
+                      Patient/MRN Identification
+                    </label>
+                    <input
+                      type="text"
+                      className="storybook-input"
+                      value={patientName}
+                      onChange={(e) => setPatientName(e.target.value)}
+                      placeholder="Patient/MRN Identification"
+                      style={{ width: '100%' }}
+                      required
+                    />
+                  </div>
 
-                    <div>
-                      <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--muted)', display: 'block', marginBottom: '6px' }}>
-                        TARGET HOSPITAL & WING
-                      </label>
-                      <input
-                        className="neu-inset"
-                        type="text"
-                        value={hospital}
-                        onChange={(e) => setHospital(e.target.value)}
-                        style={{ width: '100%' }}
-                        required
-                      />
-                    </div>
+                  <div style={{ marginBottom: '18px' }}>
+                    <select
+                      className="storybook-input"
+                      value={hospital}
+                      onChange={(e) => setHospital(e.target.value)}
+                      style={{ width: '100%', cursor: 'pointer' }}
+                      required
+                    >
+                      <option value="Aster Medcity, South Trauma Wing">Aster Medcity, South Trauma Wing</option>
+                      <option value="General Hospital Ernakulam">General Hospital Ernakulam</option>
+                      <option value="Lisie Hospital Cardiology Wing">Lisie Hospital Cardiology Wing</option>
+                      <option value="Medical Trust Emergency Unit">Medical Trust Emergency Unit</option>
+                    </select>
+                  </div>
 
-                    <div>
-                      <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--muted)', display: 'block', marginBottom: '6px' }}>
-                        REQUESTED UNITS (PRBC / WHOLE)
-                      </label>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div className="neu-inset" style={{ flex: 1, textAlign: 'center', fontWeight: 'bold' }}>
-                          🩸 {units} Units
-                        </div>
-                        <button type="button" className="neu-pill" style={{ width: '36px', height: '36px', fontSize: '16px' }} onClick={() => setUnits(Math.max(1, units - 1))}>-</button>
-                        <button type="button" className="neu-pill" style={{ width: '36px', height: '36px', fontSize: '16px' }} onClick={() => setUnits(units + 1)}>+</button>
-                      </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--obsidian)' }}>Units Needed:</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <button type="button" className="blood-pill" style={{ padding: '3px 10px' }} onClick={() => setUnits(Math.max(1, units - 1))}>-</button>
+                      <span style={{ fontWeight: 700, fontSize: '13px', minWidth: '45px', textAlign: 'center' }}>{units} Units</span>
+                      <button type="button" className="blood-pill" style={{ padding: '3px 10px' }} onClick={() => setUnits(units + 1)}>+</button>
                     </div>
                   </div>
 
-                  <div>
-                    <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--muted)', display: 'block', marginBottom: '6px' }}>
-                      BLOOD TYPE
+                  <div style={{ marginBottom: '8px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--obsidian)', display: 'block', marginBottom: '8px' }}>
+                      Requested Blood Group
                     </label>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
                       {BLOOD_GROUPS.map((group) => (
                         <button
                           key={group}
                           type="button"
                           onClick={() => setSelectedGroup(group)}
-                          className={`neu-pill ${selectedGroup === group ? 'neu-pill-active' : ''}`}
-                          style={{ padding: '9px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 'bold' }}
+                          className={`blood-pill ${selectedGroup === group ? 'blood-pill-active' : ''}`}
                         >
-                          <span>{group}</span>
-                          <span>{selectedGroup === group ? '●' : '›'}</span>
+                          {group}
                         </button>
                       ))}
                     </div>
                   </div>
-                </div>
 
-                <div style={{ textAlign: 'center', marginTop: '28px' }}>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="neu-broadcast-btn"
-                    style={{ padding: '12px 36px', fontSize: '14px' }}
-                  >
-                    {loading ? 'Broadcasting...' : `((•)) Broadcast in ${district}`}
-                  </button>
                   {statusMessage && (
-                    <p style={{ fontSize: '12px', color: 'var(--crimson)', fontWeight: 'bold', marginTop: '8px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--crimson-bright)', fontWeight: 600, marginTop: '10px', textAlign: 'center' }}>
                       {statusMessage}
-                    </p>
-                  )}
-                  <p style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '8px' }}>
-                    🔒 Encrypted SMS & App Alert to Verified Volunteers
-                  </p>
-                </div>
-              </form>
-
-              {/* Matched Donors Section */}
-              <section style={{ width: '100%', maxWidth: '860px', marginTop: '40px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <h3 style={{ fontSize: '14px', fontWeight: '700', margin: 0 }}>
-                    <span style={{ color: 'var(--crimson)' }}>●</span> Matched Donors in {district}{' '}
-                    <span style={{ fontWeight: '400', color: 'var(--muted)' }}>(Masked Privacy Protocol)</span>
-                  </h3>
-                  <span style={{ fontSize: '12px', color: 'var(--sand)', fontWeight: 'bold' }}>
-                    ● {donors.filter((d) => d.is_eligible).length} Eligible Donors Active Nearby
-                  </span>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px' }}>
-                  {donors.length === 0 ? (
-                    <div className="neu-raised" style={{ padding: '24px', textAlign: 'center', color: 'var(--muted)', gridColumn: '1 / -1' }}>
-                      No registered donors found for {selectedGroup} in {district} district. (Use "Register Donor" to add one!)
                     </div>
-                  ) : (
-                    donors.map((donor) => {
-                      const isAcceptedByThisDonor = matchedDonor?.id === donor.id;
-                      const isOtherDonorAccepted = Boolean(matchedDonor && !isAcceptedByThisDonor);
-
-                      return (
-                        <div
-                          key={donor.id}
-                          className="neu-raised"
-                          style={{
-                            padding: '20px',
-                            opacity: !donor.is_eligible || isOtherDonorAccepted ? 0.55 : 1,
-                            border: isAcceptedByThisDonor ? '2px solid var(--crimson)' : 'none'
-                          }}
-                        >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              <div className="neu-inset" style={{ borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '12px' }}>
-                                {donor.name.split(' ').map((n) => n[0]).join('')}
-                              </div>
-                              <div>
-                                <div style={{ fontWeight: 'bold', fontSize: '13px' }}>{donor.name}</div>
-                                <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{donor.district}</div>
-                              </div>
-                            </div>
-                            <span className="neu-pill" style={{ padding: '4px 10px', fontWeight: 'bold', fontSize: '12px' }}>
-                              {donor.blood_group}
-                            </span>
-                          </div>
-
-                          <div style={{ fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                              <span style={{ color: 'var(--muted)' }}>Phone:</span>
-                              <strong style={{ color: isAcceptedByThisDonor ? 'var(--crimson)' : 'var(--obsidian)', fontFamily: 'monospace' }}>
-                                {isAcceptedByThisDonor ? matchedDonor.phone : donor.masked_phone}
-                              </strong>
-                            </div>
-
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                              <span style={{ color: 'var(--muted)' }}>Interval Status:</span>
-                              {donor.is_eligible ? (
-                                <span style={{ color: '#2B7A4B', fontWeight: '600' }}>Eligible (Ready)</span>
-                              ) : (
-                                <span style={{ color: 'var(--sand)', fontWeight: '600' }}>
-                                  {90 - donor.days_since_donation}d Cooldown Lock
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          {isAcceptedByThisDonor ? (
-                            <a
-                              href={`tel:${matchedDonor.phone}`}
-                              className="neu-pill"
-                              style={{ display: 'block', textAlign: 'center', padding: '9px', fontSize: '12px', fontWeight: 'bold', color: 'var(--crimson)', textDecoration: 'none' }}
-                            >
-                              📞 Call Matched Donor
-                            </a>
-                          ) : isOtherDonorAccepted ? (
-                            <div style={{ textAlign: 'center', fontSize: '11px', color: 'var(--muted)', padding: '6px 0' }}>
-                              🔒 Fulfilled by another donor
-                            </div>
-                          ) : (
-                            <div className="neu-inset" style={{ textAlign: 'center', fontSize: '11px', color: 'var(--muted)', padding: '8px' }}>
-                              🔒 Contact Protected (Awaiting Donor Accept)
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })
                   )}
-                </div>
-              </section>
-            </main>
-          )}
+                </form>
 
-          {/* DONOR PORTAL VIEW */}
-          {persona === 'donor' && (
-            <main style={{ maxWidth: '640px', margin: '0 auto', width: '100%' }}>
-              {!currentDonor ? (
-                <div className="neu-raised" style={{ padding: '32px', textAlign: 'center', color: 'var(--muted)' }}>
-                  No registered donors found in {district}. Switch district in the header or register a new donor profile.
+                <div style={{ marginTop: '20px' }}>
+                  <button type="button" disabled={loading} onClick={handleBroadcast} className="storybook-broadcast-btn">
+                    {loading ? 'Broadcasting...' : 'Broadcast Request'}
+                  </button>
                 </div>
-              ) : (
-                <div className="neu-raised" style={{ padding: '32px', marginBottom: '24px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <div>
-                      <span style={{ fontSize: '11px', letterSpacing: '1px', color: 'var(--sand)', fontWeight: 'bold' }}>
-                        DONOR HEALTH PROFILE
+              </>
+            )}
+
+            {/* 2. DONOR PERSONA VIEW: Only displays the donor health profile card */}
+            {persona === 'donor' && (
+              <div className="storybook-card" style={{ width: '100%', maxWidth: '460px', padding: '28px 30px' }}>
+                <span style={{ fontSize: '10px', letterSpacing: '1px', color: 'var(--sand-tint)', fontWeight: 700 }}>
+                  DONOR HEALTH PASSPORT
+                </span>
+                <h3 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '26px', margin: '4px 0 12px 0' }}>
+                  {currentDonor ? currentDonor.name : 'Select Donor'}
+                </h3>
+
+                {currentDonor ? (
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                      <div className="storybook-input" style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '10px', color: 'var(--muted)' }}>BLOOD GROUP</div>
+                        <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--crimson-bright)' }}>{currentDonor.blood_group}</div>
+                      </div>
+                      <div className="storybook-input" style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '10px', color: 'var(--muted)' }}>LAST DONATION</div>
+                        <div style={{ fontSize: '16px', fontWeight: 700 }}>{currentDonor.days_since_donation}d ago</div>
+                      </div>
+                    </div>
+
+                    <div style={{ marginBottom: '16px', textAlign: 'center' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: currentDonor.is_eligible ? '#2B7A4B' : 'var(--crimson-bright)' }}>
+                        {currentDonor.is_eligible ? '✓ 90-Day Interval Met (Ready to donate)' : `🔒 In Cooldown (${90 - currentDonor.days_since_donation}d left)`}
                       </span>
-                      <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: '28px', margin: '4px 0' }}>
-                        {currentDonor.name}
-                      </h2>
-                      <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Verified Volunteer • {currentDonor.district}</span>
-                    </div>
-                    <div className="neu-inset" style={{ padding: '12px 18px', textAlign: 'center' }}>
-                      <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--crimson)' }}>{currentDonor.blood_group}</div>
-                      <div style={{ fontSize: '10px', color: 'var(--muted)' }}>BLOOD TYPE</div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-                    <div className="neu-inset" style={{ padding: '14px' }}>
-                      <div style={{ fontSize: '11px', color: 'var(--muted)' }}>DAYS SINCE LAST DONATION</div>
-                      <div style={{ fontSize: '18px', fontWeight: 'bold', marginTop: '4px' }}>
-                        {currentDonor.days_since_donation} Days
-                      </div>
                     </div>
 
-                    <div className="neu-inset" style={{ padding: '14px' }}>
-                      <div style={{ fontSize: '11px', color: 'var(--muted)' }}>90-DAY INTERVAL RULE</div>
-                      <div style={{ fontSize: '14px', fontWeight: 'bold', marginTop: '6px', color: currentDonor.is_eligible ? '#2B7A4B' : 'var(--crimson)' }}>
-                        {currentDonor.is_eligible ? '✓ Fully Eligible' : `🔒 Locked (${90 - currentDonor.days_since_donation}d left)`}
-                      </div>
-                    </div>
-                  </div>
-
-                  {activeRequestId && !matchedDonor ? (
-                    currentDonor.is_eligible && currentDonor.blood_group === selectedGroup ? (
-                      <div className="neu-raised" style={{ padding: '20px', borderLeft: '4px solid var(--crimson)', background: '#FAF9F6' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                          <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--crimson)' }}>
-                            🚨 URGENT TRIAGE DISPATCH IN {district.toUpperCase()}
-                          </span>
-                          <span className="neu-pill" style={{ padding: '3px 8px', fontSize: '10px', color: 'var(--crimson)', fontWeight: 'bold' }}>
-                            ACTION NEEDED
-                          </span>
-                        </div>
-                        <p style={{ fontSize: '13px', margin: '4px 0 16px 0', color: 'var(--obsidian)' }}>
-                          <strong>{hospital}</strong> requires {units} unit(s) of <strong>{selectedGroup}</strong> for patient {patientName}.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => handleAcceptDonation(currentDonor)}
-                          className="neu-broadcast-btn"
-                          style={{ width: '100%', padding: '12px', fontSize: '13px' }}
-                        >
-                          ✓ Accept & Share My Contact Details
-                        </button>
+                    {activeRequestId && !matchedDonor && currentDonor.is_eligible && currentDonor.blood_group === selectedGroup ? (
+                      <button
+                        type="button"
+                        onClick={() => handleAcceptDonation(currentDonor)}
+                        className="storybook-broadcast-btn"
+                        style={{ width: '100%', background: 'var(--crimson-bright)', color: '#FFFFFF' }}
+                      >
+                        ✓ Accept & Share My Number
+                      </button>
+                    ) : matchedDonor?.id === currentDonor.id ? (
+                      <div style={{ textAlign: 'center', fontSize: '12px', color: '#2B7A4B', fontWeight: 700 }}>
+                        ✓ You accepted this request! Contact shared.
                       </div>
                     ) : (
-                      <div className="neu-inset" style={{ padding: '14px', textAlign: 'center', fontSize: '12px', color: 'var(--muted)' }}>
-                        {currentDonor.is_eligible
-                          ? `Incoming dispatch is for ${selectedGroup}. Stand by for dispatches in ${currentDonor.district} matching your blood group.`
-                          : 'You are currently in your cooldown recovery interval (90-day protocol).'
-                        }
+                      <div style={{ textAlign: 'center', fontSize: '11px', color: 'var(--muted)' }}>
+                        No pending dispatch matching your blood group.
                       </div>
-                    )
-                  ) : matchedDonor?.id === currentDonor.id ? (
-                    <div className="neu-raised" style={{ padding: '20px', textAlign: 'center', border: '1.5px solid #2B7A4B' }}>
-                      <div style={{ fontSize: '20px', marginBottom: '4px' }}>🤝</div>
-                      <strong style={{ color: '#2B7A4B', fontSize: '14px' }}>You accepted this request!</strong>
-                      <p style={{ fontSize: '12px', color: 'var(--muted)', margin: '6px 0 0 0' }}>
-                        Your phone number ({matchedDonor.phone}) has been shared exclusively with {hospital}.
-                      </p>
+                    )}
+                  </>
+                ) : (
+                  <div style={{ textAlign: 'center', fontSize: '12px', color: 'var(--muted)' }}>
+                    No registered donor found in {district}.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 3. ACTIVE MATCHES PAGE: Card in the top right */}
+            {activeNav === 'Active Matches' && persona === 'recipient' && (
+              <div className="storybook-card" style={{ width: '100%', maxWidth: '460px', padding: '28px 30px' }}>
+                <span style={{ fontSize: '10px', letterSpacing: '1px', color: 'var(--sand-tint)', fontWeight: 700 }}>
+                  TRIAGE AUDIT LOGS
+                </span>
+                <h3 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '26px', margin: '4px 0 16px 0' }}>
+                  Active Matches
+                </h3>
+
+                {!matchedDonor ? (
+                  <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '24px 0', fontSize: '13px' }}>
+                    No donor handshakes confirmed yet in {district}. Go to Requests to initiate a triage.
+                  </div>
+                ) : (
+                  <div style={{ padding: '14px 16px', background: '#ECE9DF', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <strong style={{ color: 'var(--crimson-bright)', fontSize: '14px' }}>{matchedDonor.name}</strong>
+                      <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Ticket #{activeRequestId?.slice(0, 8)} • Mutual Accept</div>
                     </div>
-                  ) : matchedDonor ? (
-                    <div className="neu-inset" style={{ padding: '14px', textAlign: 'center', fontSize: '12px', color: 'var(--muted)' }}>
-                      Active triage ticket has been fulfilled by another volunteer donor.
-                    </div>
-                  ) : (
-                    <div className="neu-inset" style={{ padding: '14px', textAlign: 'center', fontSize: '12px', color: 'var(--muted)' }}>
-                      No active emergency dispatches pending in {district} at this moment.
+                    <a href={`tel:${matchedDonor.phone}`} style={{ fontWeight: 700, color: 'var(--crimson-bright)', fontSize: '13px', textDecoration: 'none' }}>
+                      📞 {matchedDonor.phone}
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 4. RESERVES PAGE: District metrics */}
+            {activeNav === 'Reserves' && persona === 'recipient' && (
+              <div className="storybook-card" style={{ width: '100%', maxWidth: '460px', padding: '28px 30px' }}>
+                <span style={{ fontSize: '10px', letterSpacing: '1px', color: 'var(--sand-tint)', fontWeight: 700 }}>
+                  REGIONAL CAPACITY
+                </span>
+                <h3 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '26px', margin: '4px 0 16px 0' }}>
+                  {district} Reserves
+                </h3>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                  {BLOOD_GROUPS.map((bg) => {
+                    const count = donors.filter((d) => d.blood_group === bg).length;
+                    return (
+                      <div key={bg} className="storybook-input" style={{ textAlign: 'center', padding: '10px 4px' }}>
+                        <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--crimson-bright)' }}>{bg}</div>
+                        <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>{count} Active</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 5. VOLUNTEER REGISTER PAGE: Registration form */}
+            {activeNav === 'Volunteer Register' && persona === 'recipient' && (
+              <form onSubmit={handleRegisterDonor} className="storybook-card" style={{ width: '100%', maxWidth: '460px', padding: '28px 30px' }}>
+                <span style={{ fontSize: '10px', letterSpacing: '1px', color: 'var(--sand-tint)', fontWeight: 700 }}>
+                  VOLUNTEER ONBOARDING
+                </span>
+                <h3 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '26px', margin: '4px 0 14px 0' }}>
+                  Register as Donor
+                </h3>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <input
+                    type="text"
+                    className="storybook-input"
+                    placeholder="Full Name"
+                    value={regName}
+                    onChange={(e) => setRegName(e.target.value)}
+                    required
+                  />
+
+                  <input
+                    type="tel"
+                    className="storybook-input"
+                    placeholder="Private Phone Number"
+                    value={regPhone}
+                    onChange={(e) => setRegPhone(e.target.value)}
+                    required
+                  />
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <select
+                      className="storybook-input"
+                      value={regDistrict}
+                      onChange={(e) => setRegDistrict(e.target.value)}
+                    >
+                      {KERALA_DISTRICTS.map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+
+                    <select
+                      className="storybook-input"
+                      value={regGroup}
+                      onChange={(e) => setRegGroup(e.target.value)}
+                    >
+                      {BLOOD_GROUPS.map((g) => (
+                        <option key={g} value={g}>{g}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <input
+                    type="number"
+                    className="storybook-input"
+                    placeholder="Last donation (days ago)"
+                    value={regDaysAgo}
+                    onChange={(e) => setRegDaysAgo(Number(e.target.value))}
+                    min="0"
+                    required
+                  />
+
+                  <button
+                    type="submit"
+                    className="storybook-broadcast-btn"
+                    style={{ background: 'var(--crimson-bright)', color: '#FFFFFF', marginTop: '6px' }}
+                  >
+                    Register Donor
+                  </button>
+
+                  {regStatus && (
+                    <div style={{ fontSize: '11px', color: 'var(--crimson-bright)', fontWeight: 600, textAlign: 'center' }}>
+                      {regStatus}
                     </div>
                   )}
                 </div>
+              </form>
+            )}
+
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Area: Matched Donors (ONLY rendered on the Requests page in recipient mode) */}
+      {activeNav === 'Requests' && persona === 'recipient' && (
+        <div style={{ flex: 1, maxWidth: '1200px', margin: '0 auto', width: '100%', padding: '40px 24px' }}>
+          <section>
+            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+              <h2
+                style={{
+                  fontFamily: 'Cormorant Garamond, serif',
+                  fontSize: '34px',
+                  fontWeight: 600,
+                  margin: '0 0 6px 0',
+                  color: 'var(--obsidian)'
+                }}
+              >
+                Matched Donors
+              </h2>
+              <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                Showing verified {selectedGroup} volunteers in {district} • Masked Privacy Protocol
+              </span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+              {donors.length === 0 ? (
+                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '36px', color: 'var(--muted)' }}>
+                  No registered donors found for {selectedGroup} in {district}.
+                </div>
+              ) : (
+                donors.map((donor) => {
+                  const isAcceptedByThisDonor = matchedDonor?.id === donor.id;
+                  const isOtherDonorAccepted = Boolean(matchedDonor && !isAcceptedByThisDonor);
+
+                  return (
+                    <div
+                      key={donor.id}
+                      className="donor-card-story"
+                      style={{
+                        opacity: !donor.is_eligible || isOtherDonorAccepted ? 0.6 : 1,
+                        border: isAcceptedByThisDonor ? '1.5px solid var(--crimson-bright)' : '1px solid rgba(0,0,0,0.05)'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px' }}>
+                        <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--obsidian)' }}>
+                          {donor.name} <span style={{ fontWeight: 400, color: 'var(--muted)' }}>| {donor.blood_group}</span>
+                        </div>
+                        <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{donor.district}</span>
+                      </div>
+
+                      <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '2px' }}>
+                        Masked Number
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '13px',
+                          fontWeight: 700,
+                          color: isAcceptedByThisDonor ? 'var(--crimson-bright)' : 'var(--obsidian)',
+                          fontFamily: 'monospace',
+                          marginBottom: '12px'
+                        }}
+                      >
+                        {isAcceptedByThisDonor ? matchedDonor.phone : donor.masked_phone}
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(0,0,0,0.04)', paddingTop: '10px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: donor.is_eligible ? '#2B7A4B' : 'var(--sand-tint)' }}>
+                          {donor.is_eligible ? 'Eligible' : `${90 - donor.days_since_donation}d lock`}
+                        </span>
+
+                        {isAcceptedByThisDonor ? (
+                          <a
+                            href={`tel:${matchedDonor.phone}`}
+                            style={{ fontSize: '11px', fontWeight: 700, color: 'var(--crimson-bright)', textDecoration: 'none' }}
+                          >
+                            📞 Direct Call
+                          </a>
+                        ) : isOtherDonorAccepted ? (
+                          <span style={{ fontSize: '10px', color: 'var(--muted)' }}>Fulfilled</span>
+                        ) : (
+                          <span style={{ fontSize: '10px', color: 'var(--muted)' }}>Protected</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
               )}
-            </main>
-          )}
-        </>
-      )}
-
-      {/* VIEW 2: LIVE MATCHES */}
-      {activeTab === 'Live Matches' && (
-        <section style={{ maxWidth: '720px', margin: '0 auto' }}>
-          <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: '28px', marginBottom: '8px' }}>Active Match Logs</h2>
-          <p style={{ color: 'var(--muted)', fontSize: '14px', marginBottom: '24px' }}>
-            Real-time audit log of peer-to-peer donor responses in {district}.
-          </p>
-          
-          <div className="neu-raised" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {!matchedDonor ? (
-              <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '20px 0' }}>
-                No active donor handshake in {district} in this session. Dispatch a request in Urgent Triage and have a donor accept it.
-              </div>
-            ) : (
-              <div className="neu-inset" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px' }}>
-                <div>
-                  <strong style={{ color: 'var(--crimson)' }}>Matched Donor: {matchedDonor.name}</strong>
-                  <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Triage Ticket #{activeRequestId?.slice(0, 8)} • Contact Shared Exclusively</div>
-                </div>
-                <a href={`tel:${matchedDonor.phone}`} className="neu-pill" style={{ padding: '8px 14px', fontSize: '13px', fontWeight: 'bold', color: 'var(--crimson)', textDecoration: 'none' }}>
-                  📞 {matchedDonor.phone}
-                </a>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* VIEW 3: DISTRICT BANK */}
-      {activeTab === 'District Bank' && (
-        <section style={{ maxWidth: '720px', margin: '0 auto' }}>
-          <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: '28px', marginBottom: '8px' }}>{district} District Reserves</h2>
-          <p style={{ color: 'var(--muted)', fontSize: '14px', marginBottom: '24px' }}>
-            Aggregated volunteer donor pool status across taluks in {district}.
-          </p>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '16px' }}>
-            {BLOOD_GROUPS.map((bg) => {
-              const count = donors.filter((d) => d.blood_group === bg).length;
-              return (
-                <div key={bg} className="neu-raised" style={{ padding: '20px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '22px', fontWeight: 'bold', color: 'var(--crimson)' }}>{bg}</div>
-                  <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>Active Pool</div>
-                  <div className="neu-inset" style={{ marginTop: '10px', fontSize: '13px', fontWeight: 'bold' }}>
-                    {selectedGroup === bg ? `${count} Donors` : 'Standby'}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* VIEW 4: REGISTER DONOR */}
-      {activeTab === 'Register Donor' && (
-        <section style={{ maxWidth: '560px', margin: '0 auto' }}>
-          <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: '28px', marginBottom: '8px', textAlign: 'center' }}>Join District Registry</h2>
-          <p style={{ color: 'var(--muted)', fontSize: '14px', marginBottom: '28px', textAlign: 'center' }}>
-            Register as a verified volunteer donor across Kerala. Your phone number remains encrypted and strictly private.
-          </p>
-
-          <form onSubmit={handleRegisterDonor} className="neu-raised" style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
-            <div>
-              <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--muted)', display: 'block', marginBottom: '6px' }}>
-                FULL NAME
-              </label>
-              <input
-                className="neu-inset"
-                type="text"
-                placeholder="e.g. Gautham S."
-                value={regName}
-                onChange={(e) => setRegName(e.target.value)}
-                style={{ width: '100%' }}
-                required
-              />
             </div>
-
-            <div>
-              <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--muted)', display: 'block', marginBottom: '6px' }}>
-                PHONE NUMBER (PROTECTED)
-              </label>
-              <input
-                className="neu-inset"
-                type="tel"
-                placeholder="e.g. 9847123456"
-                value={regPhone}
-                onChange={(e) => setRegPhone(e.target.value)}
-                style={{ width: '100%' }}
-                required
-              />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div>
-                <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--muted)', display: 'block', marginBottom: '6px' }}>
-                  DISTRICT
-                </label>
-                <select
-                  className="neu-inset"
-                  value={regDistrict}
-                  onChange={(e) => setRegDistrict(e.target.value)}
-                  style={{ width: '100%', background: 'var(--bg-pearl)' }}
-                >
-                  {KERALA_DISTRICTS.map((d) => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--muted)', display: 'block', marginBottom: '6px' }}>
-                  BLOOD GROUP
-                </label>
-                <select
-                  className="neu-inset"
-                  value={regGroup}
-                  onChange={(e) => setRegGroup(e.target.value)}
-                  style={{ width: '100%', background: 'var(--bg-pearl)' }}
-                >
-                  {BLOOD_GROUPS.map((g) => (
-                    <option key={g} value={g}>{g}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--muted)', display: 'block', marginBottom: '6px' }}>
-                LAST DONATION (DAYS AGO)
-              </label>
-              <input
-                className="neu-inset"
-                type="number"
-                value={regDaysAgo}
-                onChange={(e) => setRegDaysAgo(Number(e.target.value))}
-                style={{ width: '100%' }}
-                min="0"
-                required
-              />
-            </div>
-
-            <button type="submit" className="neu-broadcast-btn" style={{ padding: '12px', marginTop: '10px' }}>
-              Register Volunteer Donor
-            </button>
-
-            {regStatus && (
-              <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--crimson)', fontWeight: 'bold', margin: 0 }}>
-                {regStatus}
-              </p>
-            )}
-          </form>
-        </section>
+          </section>
+        </div>
       )}
     </div>
   );
