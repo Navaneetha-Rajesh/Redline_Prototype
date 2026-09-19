@@ -9,12 +9,26 @@ const KERALA_DISTRICTS = [
 
 const BLOOD_GROUPS = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
 
+const COMPATIBLE_DONORS = {
+  'O-': ['O-'],
+  'O+': ['O+', 'O-'],
+  'A-': ['A-', 'O-'],
+  'A+': ['A+', 'A-', 'O+', 'O-'],
+  'B-': ['B-', 'O-'],
+  'B+': ['B+', 'B-', 'O+', 'O-'],
+  'AB-': ['AB-', 'A-', 'B-', 'O-'],
+  'AB+': ['AB+', 'AB-', 'A+', 'A-', 'B+', 'B-', 'O+', 'O-'],
+};
+
 export default function App() {
   // Navigation & Persona Switcher States
   const [activeNav, setActiveNav] = useState('Requests'); // 'Active Matches' | 'Volunteer Register' | 'Requests' | 'Reserves'
   const [district, setDistrict] = useState('Ernakulam');
   const [persona, setPersona] = useState('recipient'); // 'recipient' | 'donor'
   const [activeDonorId, setActiveDonorId] = useState('');
+
+  // District Reserves State (Correctly positioned inside App)
+  const [districtReserves, setDistrictReserves] = useState({});
 
   // Hospital / Recipient Request Form States
   const [patientName, setPatientName] = useState('Aditya Ramesh #ER-88421');
@@ -38,13 +52,15 @@ export default function App() {
   const [regDaysAgo, setRegDaysAgo] = useState(100);
   const [regStatus, setRegStatus] = useState('');
 
-  // Fetch masked donors for the selected group & district
-  const fetchDonors = async (bloodGroup, currentDistrict) => {
+  // Fetch masked donors compatible with the selected blood group in the chosen district
+  const fetchDonors = async (requestedGroup, currentDistrict) => {
     try {
+      const compatibleGroups = COMPATIBLE_DONORS[requestedGroup] || [requestedGroup];
+
       const { data, error } = await supabase
         .from('public_eligible_donors')
         .select('*')
-        .eq('blood_group', bloodGroup)
+        .in('blood_group', compatibleGroups)
         .eq('district', currentDistrict);
 
       if (error) throw error;
@@ -56,12 +72,44 @@ export default function App() {
         setActiveDonorId('');
       }
     } catch (err) {
-      console.error('Error fetching donors:', err.message);
+      console.error('Error fetching compatible donors:', err.message);
     }
   };
 
+  // Fetch full aggregate count across all blood types for the selected district
+  const fetchDistrictReserves = async (currentDistrict) => {
+    try {
+      const { data, error } = await supabase
+        .from('public_eligible_donors')
+        .select('blood_group, is_eligible')
+        .eq('district', currentDistrict);
+
+      if (error) throw error;
+
+      const counts = {};
+      BLOOD_GROUPS.forEach((bg) => {
+        counts[bg] = { total: 0, eligible: 0 };
+      });
+
+      (data || []).forEach((d) => {
+        if (counts[d.blood_group]) {
+          counts[d.blood_group].total += 1;
+          if (d.is_eligible) {
+            counts[d.blood_group].eligible += 1;
+          }
+        }
+      });
+
+      setDistrictReserves(counts);
+    } catch (err) {
+      console.error('Error fetching district reserves:', err.message);
+    }
+  };
+
+  // Synchronize both donors and reserves whenever blood group or district changes
   useEffect(() => {
     fetchDonors(selectedGroup, district);
+    fetchDistrictReserves(district);
     setMatchedDonor(null);
   }, [selectedGroup, district]);
 
@@ -101,7 +149,7 @@ export default function App() {
       const newNotification = {
         id: Date.now(),
         title: `🚨 Emergency Alert Sent (${selectedGroup} in ${district})`,
-        message: `High-priority ping dispatched to ${eligibleCount} eligible donors in ${district}.`,
+        message: `High-priority ping dispatched to ${eligibleCount} compatible eligible donors in ${district}.`,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
@@ -163,6 +211,7 @@ export default function App() {
       setRegName('');
       setRegPhone('');
       fetchDonors(selectedGroup, district);
+      fetchDistrictReserves(district);
     } catch (err) {
       setRegStatus('Registration Error: ' + err.message);
     }
@@ -460,7 +509,7 @@ export default function App() {
               </>
             )}
 
-            {/* 2. DONOR PERSONA VIEW: Only displays the donor health profile card */}
+            {/* 2. DONOR PERSONA VIEW */}
             {persona === 'donor' && (
               <div className="storybook-card" style={{ width: '100%', maxWidth: '460px', padding: '28px 30px' }}>
                 <span style={{ fontSize: '10px', letterSpacing: '1px', color: 'var(--sand-tint)', fontWeight: 700 }}>
@@ -489,7 +538,7 @@ export default function App() {
                       </span>
                     </div>
 
-                    {activeRequestId && !matchedDonor && currentDonor.is_eligible && currentDonor.blood_group === selectedGroup ? (
+                    {activeRequestId && !matchedDonor && currentDonor.is_eligible && (COMPATIBLE_DONORS[selectedGroup] || []).includes(currentDonor.blood_group) ? (
                       <button
                         type="button"
                         onClick={() => handleAcceptDonation(currentDonor)}
@@ -516,7 +565,7 @@ export default function App() {
               </div>
             )}
 
-            {/* 3. ACTIVE MATCHES PAGE: Card in the top right */}
+            {/* 3. ACTIVE MATCHES PAGE */}
             {activeNav === 'Active Matches' && persona === 'recipient' && (
               <div className="storybook-card" style={{ width: '100%', maxWidth: '460px', padding: '28px 30px' }}>
                 <span style={{ fontSize: '10px', letterSpacing: '1px', color: 'var(--sand-tint)', fontWeight: 700 }}>
@@ -544,7 +593,7 @@ export default function App() {
               </div>
             )}
 
-            {/* 4. RESERVES PAGE: District metrics */}
+            {/* 4. RESERVES PAGE: Accurately counts all blood groups */}
             {activeNav === 'Reserves' && persona === 'recipient' && (
               <div className="storybook-card" style={{ width: '100%', maxWidth: '460px', padding: '28px 30px' }}>
                 <span style={{ fontSize: '10px', letterSpacing: '1px', color: 'var(--sand-tint)', fontWeight: 700 }}>
@@ -556,11 +605,16 @@ export default function App() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
                   {BLOOD_GROUPS.map((bg) => {
-                    const count = donors.filter((d) => d.blood_group === bg).length;
+                    const stats = districtReserves[bg] || { total: 0, eligible: 0 };
                     return (
                       <div key={bg} className="storybook-input" style={{ textAlign: 'center', padding: '10px 4px' }}>
                         <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--crimson-bright)' }}>{bg}</div>
-                        <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>{count} Active</div>
+                        <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--obsidian)', marginTop: '2px' }}>
+                          {stats.eligible} Active
+                        </div>
+                        <div style={{ fontSize: '9px', color: 'var(--muted)' }}>
+                          {stats.total} Registered
+                        </div>
                       </div>
                     );
                   })}
@@ -568,7 +622,7 @@ export default function App() {
               </div>
             )}
 
-            {/* 5. VOLUNTEER REGISTER PAGE: Registration form */}
+            {/* 5. VOLUNTEER REGISTER PAGE */}
             {activeNav === 'Volunteer Register' && persona === 'recipient' && (
               <form onSubmit={handleRegisterDonor} className="storybook-card" style={{ width: '100%', maxWidth: '460px', padding: '28px 30px' }}>
                 <span style={{ fontSize: '10px', letterSpacing: '1px', color: 'var(--sand-tint)', fontWeight: 700 }}>
@@ -667,14 +721,14 @@ export default function App() {
                 Matched Donors
               </h2>
               <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                Showing verified {selectedGroup} volunteers in {district} • Masked Privacy Protocol
+                Showing compatible volunteers for {selectedGroup} in {district} • Masked Privacy Protocol
               </span>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
               {donors.length === 0 ? (
                 <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '36px', color: 'var(--muted)' }}>
-                  No registered donors found for {selectedGroup} in {district}.
+                  No compatible donors found for {selectedGroup} in {district}.
                 </div>
               ) : (
                 donors.map((donor) => {
