@@ -148,7 +148,7 @@ export default function App() {
       const eligibleCount = donors.filter((d) => d.is_eligible).length;
       const newNotification = {
         id: Date.now(),
-        title: `🚨 Emergency Alert Sent (${selectedGroup} in ${district})`,
+        title: ` Emergency Alert Sent (${selectedGroup} in ${district})`,
         message: `High-priority ping dispatched to ${eligibleCount} compatible eligible donors in ${district}.`,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
@@ -238,22 +238,24 @@ export default function App() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <span
-              style={{
-                fontFamily: 'Cormorant Garamond, serif',
-                fontSize: '32px',
-                fontWeight: 700,
-                color: '#1E1919',
-                cursor: 'pointer'
-              }}
-              onClick={() => setActiveNav('Requests')}
-            >
-              RedLine
-            </span>
+  <span
+    style={{
+      fontFamily: 'Cormorant Garamond, serif',
+      fontSize: '32px',
+      fontWeight: 700,
+      cursor: 'pointer',
+      lineHeight: '1.1'
+    }}
+    onClick={() => setActiveNav('Requests')}
+  >
+    <span style={{ color: 'var(--crimson-bright, #710014)' }}>Red</span>
+    <span style={{ color: '#1E1919' }}>Line</span>
+  </span>
+            
 
             {/* District Selector */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 600 }}>📍</span>
+              <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 600 }}></span>
               <select
                 className="storybook-input"
                 value={district}
@@ -720,7 +722,7 @@ export default function App() {
               >
                 Matched Donors
               </h2>
-              <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
+              <span style={{ fontSize: '14px', color: 'var(--muted)' }}>
                 Showing compatible volunteers for {selectedGroup} in {district} • Masked Privacy Protocol
               </span>
             </div>
