@@ -31,7 +31,7 @@ html {
   background-repeat: no-repeat;
   background-position: top center;
   background-size: 100% auto; 
-  background-color: var(#ece6d4); 
+  background-color: var(--bg-cream);
   
 }
 
